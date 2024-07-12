@@ -22,7 +22,7 @@ This tool compares binary packages between the `p10` and `sisyphus` branches of 
 2. Install the required Python libraries:
 
     ```sh
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
     ```
    
 3. Make the CLI script executable:
@@ -36,14 +36,14 @@ This tool compares binary packages between the `p10` and `sisyphus` branches of 
 Run the following command to compare packages:
 
    ```sh
-   python main.py
+   python3 main.py
    ```
 
 You will be prompted to specify the output format (json or text).
 Alternatively, you can specify the output format directly using the --output argument:
 
    ```sh
-   python main.py --output json
+   python3 main.py --output json
    ```
 
 ## Running the CLI Script

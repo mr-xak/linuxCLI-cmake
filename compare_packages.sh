@@ -17,4 +17,4 @@ if [[ "$output_format" != "json" && "$output_format" != "text" ]]; then
 fi
 
 # Run the Python script with the specified output format
-python main.py --output $output_format
+python3 main.py --output $output_format
