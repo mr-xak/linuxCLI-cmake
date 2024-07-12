@@ -1,8 +1,8 @@
 import os
-
+import rpm_vercmp
 import requests
 import json
-from packaging.version import Version, InvalidVersion
+from tabulate import tabulate
 
 API_BASE_URL = "https://rdb.altlinux.org/api/export/branch_binary_packages/"
 
@@ -35,16 +35,15 @@ def get_packages(branch):
 
 def compare_versions(version1, version2):
     """
-    Compares two versions of packages.
+    Compares two versions of packages using rpm_vercmp.
 
     :param version1: First version
     :param version2: Second version
     :return: True if the first version is greater than the second, otherwise False
     """
-    try:
-        return Version(version1.replace("-", ".")) > Version(version2.replace("-", "."))
-    except InvalidVersion:
-        return False
+    result = rpm_vercmp.vercmp(version1, version2)
+    return result > 0
+
 
 def compare_all_architectures():
     """
@@ -66,7 +65,7 @@ def compare_all_architectures():
         sisyphus_arch_pkgs = [pkg for pkg in sisyphus_packages if pkg['arch'] == arch]
         results[arch] = compare_packages(p10_arch_pkgs, sisyphus_arch_pkgs)
 
-        print(results)
+    return results
 
 
 def compare_packages(p10_packages, sisyphus_packages):
@@ -104,8 +103,34 @@ def compare_packages(p10_packages, sisyphus_packages):
     return result
 
 
+def print_comparison_results(results):
+    """
+    Prints the comparison results in a formatted table.
+
+    :param results: Comparison results for each architecture
+    """
+    for arch, data in results.items():
+        print(f"\nArchitecture: {arch}")
+
+        if data['p10_only']:
+            print("\nPackages only in p10:")
+            print(tabulate([[pkg['name'], pkg['version'], pkg['release']] for pkg in data['p10_only']],
+                           headers=["Name", "Version", "Release"]))
+
+        if data['sisyphus_only']:
+            print("\nPackages only in sisyphus:")
+            print(tabulate([[pkg['name'], pkg['version'], pkg['release']] for pkg in data['sisyphus_only']],
+                           headers=["Name", "Version", "Release"]))
+
+        if data['sisyphus_newer']:
+            print("\nPackages with newer versions in sisyphus:")
+            print(tabulate([[pkg['name'], pkg['version'], pkg['release']] for pkg in data['sisyphus_newer']],
+                           headers=["Name", "Version", "Release"]))
+
+
 if __name__ == "__main__":
     try:
-        compare_all_architectures()
+        comparison_results = compare_all_architectures()
+        print_comparison_results(comparison_results)
     except Exception as e:
         print(e)
