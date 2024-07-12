@@ -103,34 +103,56 @@ def compare_packages(p10_packages, sisyphus_packages):
     return result
 
 
-def print_comparison_results(results):
+def get_comparison_results(results):
     """
-    Prints the comparison results in a formatted table.
+    Get the comparison results in a formatted table.
 
     :param results: Comparison results for each architecture
     """
+    final_results = {}
     for arch, data in results.items():
         print(f"\nArchitecture: {arch}")
 
-        if data['p10_only']:
-            print("\nPackages only in p10:")
-            print(tabulate([[pkg['name'], pkg['version'], pkg['release']] for pkg in data['p10_only']],
-                           headers=["Name", "Version", "Release"]))
+        final_results[arch] = {
+            "p10_only": [],
+            "sisyphus_only": [],
+            "sisyphus_newer": []
+        }
 
-        if data['sisyphus_only']:
-            print("\nPackages only in sisyphus:")
-            print(tabulate([[pkg['name'], pkg['version'], pkg['release']] for pkg in data['sisyphus_only']],
-                           headers=["Name", "Version", "Release"]))
+    if data['p10_only']:
+        print("\nPackages only in p10:")
+        print(tabulate([[pkg['name'], pkg['version'], pkg['release']] for pkg in data['p10_only']],
+                       headers=["Name", "Version", "Release"]))
+        final_results[arch]["p10_only"] = data['p10_only']
 
-        if data['sisyphus_newer']:
-            print("\nPackages with newer versions in sisyphus:")
-            print(tabulate([[pkg['name'], pkg['version'], pkg['release']] for pkg in data['sisyphus_newer']],
-                           headers=["Name", "Version", "Release"]))
+    if data['sisyphus_only']:
+        print("\nPackages only in sisyphus:")
+        print(tabulate([[pkg['name'], pkg['version'], pkg['release']] for pkg in data['sisyphus_only']],
+                       headers=["Name", "Version", "Release"]))
+        final_results[arch]["sisyphus_only"] = data['sisyphus_only']
+
+    if data['sisyphus_newer']:
+        print("\nPackages with newer versions in sisyphus:")
+        print(tabulate([[pkg['name'], pkg['version'], pkg['release']] for pkg in data['sisyphus_newer']],
+                       headers=["Name", "Version", "Release"]))
+        final_results[arch]["sisyphus_newer"] = data['sisyphus_newer']
+
+    with open('comparison_results.json', 'w') as f:
+        json.dump(final_results, f, indent=4)
+    print("\nResults have been saved to comparison_results.json")
+
+
+def main():
+    """
+    Main function for CLI utility.
+    Retrieves and compares packages, then outputs the results in a formatted table and JSON.
+    """
+    comparison_results = compare_all_architectures()
+    get_comparison_results(comparison_results)
 
 
 if __name__ == "__main__":
     try:
-        comparison_results = compare_all_architectures()
-        print_comparison_results(comparison_results)
+        main()
     except Exception as e:
         print(e)
