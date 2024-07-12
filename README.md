@@ -15,8 +15,8 @@ This tool compares binary packages between the `p10` and `sisyphus` branches of 
 1. Clone the repository and navigate into the project directory:
 
     ```sh
-    git clone <repository_url>
-    cd <repository_name>
+    git clone https://github.com/cobaltCorsair/linuxCLI.git
+    cd linuxCLI
     ```
 
 2. Install the required Python libraries:
