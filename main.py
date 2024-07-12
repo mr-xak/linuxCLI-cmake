@@ -2,7 +2,7 @@ import os
 
 import requests
 import json
-from packaging import version
+from packaging.version import Version, InvalidVersion
 
 API_BASE_URL = "https://rdb.altlinux.org/api/export/branch_binary_packages/"
 
@@ -40,9 +40,11 @@ def compare_versions(version1, version2):
     :param version1: First version
     :param version2: Second version
     :return: True if the first version is greater than the second, otherwise False
-     """
-    return version.parse(version1) > version.parse(version2)
-
+    """
+    try:
+        return Version(version1.replace("-", ".")) > Version(version2.replace("-", "."))
+    except InvalidVersion:
+        return False
 
 def compare_all_architectures():
     """
@@ -56,12 +58,50 @@ def compare_all_architectures():
 
     # Extract unique architectures
     architectures = set(pkg['arch'] for pkg in p10_packages + sisyphus_packages)
+    results = {}
 
     for arch in architectures:
         # Filter packages by architecture
         p10_arch_pkgs = [pkg for pkg in p10_packages if pkg['arch'] == arch]
         sisyphus_arch_pkgs = [pkg for pkg in sisyphus_packages if pkg['arch'] == arch]
-        print(p10_arch_pkgs, sisyphus_arch_pkgs)
+        results[arch] = compare_packages(p10_arch_pkgs, sisyphus_arch_pkgs)
+
+        print(results)
+
+
+def compare_packages(p10_packages, sisyphus_packages):
+    """
+    Compares package lists between two branches.
+
+    :param p10_packages: List of packages for p10 branch
+    :param sisyphus_packages: List of packages for sisyphus branch
+    :return: Comparison results in JSON format
+    """
+    p10_dict = {pkg['name']: pkg for pkg in p10_packages}
+    sisyphus_dict = {pkg['name']: pkg for pkg in sisyphus_packages}
+
+    result = {
+        'p10_only': [],
+        'sisyphus_only': [],
+        'sisyphus_newer': []
+    }
+
+    for pkg_name, pkg in p10_dict.items():
+        if pkg_name not in sisyphus_dict:
+            result['p10_only'].append(pkg)
+        else:
+            sisyphus_pkg = sisyphus_dict[pkg_name]
+            if compare_versions(
+                    f"{sisyphus_pkg['version']}-{sisyphus_pkg['release']}",
+                    f"{pkg['version']}-{pkg['release']}"
+            ):
+                result['sisyphus_newer'].append(sisyphus_pkg)
+
+    for pkg_name, pkg in sisyphus_dict.items():
+        if pkg_name not in p10_dict:
+            result['sisyphus_only'].append(pkg)
+
+    return result
 
 
 if __name__ == "__main__":
@@ -69,4 +109,3 @@ if __name__ == "__main__":
         compare_all_architectures()
     except Exception as e:
         print(e)
-
