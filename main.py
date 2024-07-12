@@ -56,7 +56,12 @@ def compare_all_architectures():
 
     # Extract unique architectures
     architectures = set(pkg['arch'] for pkg in p10_packages + sisyphus_packages)
-    print(architectures)
+
+    for arch in architectures:
+        # Filter packages by architecture
+        p10_arch_pkgs = [pkg for pkg in p10_packages if pkg['arch'] == arch]
+        sisyphus_arch_pkgs = [pkg for pkg in sisyphus_packages if pkg['arch'] == arch]
+        print(p10_arch_pkgs, sisyphus_arch_pkgs)
 
 
 if __name__ == "__main__":
