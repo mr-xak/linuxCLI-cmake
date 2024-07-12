@@ -1,0 +1,4 @@
+requests
+tabulate
+tqdm
+rpm_vercmp
